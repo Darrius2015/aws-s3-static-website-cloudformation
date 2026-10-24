@@ -30,3 +30,164 @@ Once testing was complete, I removed the uploaded website files and deleted the 
 * Infrastructure Template: s3-static.yaml
 * Website Hosting: Amazon S3 static website hosting
 * Access Configuration: S3 bucket policy permitting public read access to website objects
+
+## Deployment Process
+
+## 1. Creating the CloudFormation Template
+
+I created a YAML CloudFormation template named s3-static.yaml to provision an Amazon S3 bucket for static website hosting.
+
+The template initially configured the following resources and properties:
+
+* An Amazon S3 bucket named my-static-website-ds.
+* Static website hosting configuration.
+* index.html as the default index document.
+
+Using CloudFormation allowed me to define the infrastructure in code rather than manually creating the bucket through the AWS Management Console.
+
+## 2. Deploying the CloudFormation Stack
+
+I used the AWS CLI to deploy the infrastructure in the London region (eu-west-2).
+
+The following command created the CloudFormation stack:
+
+aws cloudformation create-stack --stack-name s3-web-stack --template-body file://s3-static.yaml
+
+After submitting the deployment, I verified the stack status using:
+
+```bash
+aws cloudformation describe-stacks \
+    --stack-name s3-web-stack \
+    --query 'Stacks[0].StackStatus' \
+    --output text
+```
+
+The command returned:
+
+CREATE_COMPLETE
+
+This confirmed that CloudFormation had successfully provisioned the S3 bucket.
+
+## 3. Uploading the Website Files
+
+After the infrastructure was deployed, I uploaded the HTML website file to the S3 bucket using the AWS CLI.
+
+aws s3 cp index.html s3://my-static-website-ds
+
+The CLI confirmed that index.html had been successfully uploaded.
+
+This demonstrated how AWS CLI commands can be used to transfer local files into Amazon S3 without manually uploading them through the AWS Management Console.
+
+## 4. Testing the Website
+
+After uploading the HTML file, I attempted to access the website through my browser.
+
+However, the initial request returned an AccessDenied error.
+
+This indicated that although the infrastructure had been successfully provisioned and the HTML file uploaded, the website content was not publicly accessible.
+
+I investigated the bucket’s public access settings and permissions before updating the infrastructure configuration.
+
+
+
+## Troubleshooting and Resolution
+
+## 1. Encountering the AccessDenied Error
+
+After successfully creating the CloudFormation stack and uploading index.html to Amazon S3, I attempted to access the website through my browser.
+
+However, the browser returned the following error:
+
+AccessDenied
+Access Denied
+
+Although the S3 bucket had been created successfully, the website content was not publicly accessible.
+
+This demonstrated that successfully deploying infrastructure does not necessarily mean that the application is accessible to its intended users.
+
+## 2. Investigating S3 Public Access Settings
+
+I investigated the S3 bucket permissions through the AWS Management Console.
+
+During the investigation, I identified that:
+
+* Block Public Access was enabled on the S3 bucket.
+* The bucket did not initially have a public-read bucket policy.
+* The website’s HTML file could not be accessed anonymously.
+
+Amazon S3 blocks public access by default to help protect stored data.
+
+For this project, public read access was required because the objective was to host a publicly accessible static website.
+
+## 3. Updating the CloudFormation Template
+
+To resolve the issue, I updated my s3-static.yaml CloudFormation template.
+
+The updated configuration included:
+
+* PublicAccessBlockConfiguration to adjust the relevant public access restriction.
+* An AWS::S3::BucketPolicy resource.
+* A policy statement granting s3:GetObject permission to anonymous users.
+
+The bucket policy allowed public read access to objects stored in the website bucket.
+
+The relevant policy configuration was:
+```yaml
+BucketPolicy:
+  Type: AWS::S3::BucketPolicy
+  Properties:
+    Bucket: !Ref MYS3Bucket
+    PolicyDocument:
+      Version: '2012-10-17'
+      Statement:
+        - Sid: PublicReadGetObject
+          Effect: Allow
+          Principal: '*'
+          Action: 's3:GetObject'
+          Resource: !Sub 'arn:aws:s3:::${MYS3Bucket}/*'
+```
+
+This configuration was intended specifically for a public static website containing non-sensitive HTML content.
+
+## 4. Updating the CloudFormation Stack
+
+Rather than deleting and recreating the infrastructure, I used the AWS CLI to update the existing CloudFormation stack.
+
+```bash
+aws cloudformation update-stack \
+    --stack-name s3-web-stack \
+    --template-body file://s3-static.yaml
+```
+
+This allowed CloudFormation to apply the infrastructure changes defined in the updated YAML template.
+
+After the update, I verified the deployment through the AWS Management Console.
+
+The CloudFormation stack showed:
+
+**UPDATE_COMPLETE**
+
+The Resources tab also confirmed that CloudFormation had created the S3 bucket policy.
+
+## 5. Verifying the Resolution
+
+After updating the bucket permissions, I accessed the website again through my browser.
+
+This time, the HTML page loaded successfully and displayed:
+
+Welcome to S3 hosted website
+This is a static website on S3
+
+This confirmed that the website content was accessible through Amazon S3.
+
+## 6. Key Lessons Learned
+
+This troubleshooting exercise helped me understand several important AWS concepts:
+
+* Infrastructure provisioning: A successful CloudFormation deployment does not automatically guarantee application accessibility.
+* AWS security: S3 Block Public Access settings can prevent anonymous access even when website hosting is configured.
+* Bucket policies: Resource-based policies control which principals can access S3 objects.
+* Infrastructure as Code: CloudFormation templates can be updated to modify existing infrastructure.
+* Troubleshooting: Investigating error messages and verifying resource configurations are important cloud engineering skills.
+* Security considerations: Public access should only be enabled when required, and sensitive data should never be exposed through a public website bucket.
+

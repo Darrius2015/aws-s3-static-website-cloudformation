@@ -191,3 +191,58 @@ This troubleshooting exercise helped me understand several important AWS concept
 * Troubleshooting: Investigating error messages and verifying resource configurations are important cloud engineering skills.
 * Security considerations: Public access should only be enabled when required, and sensitive data should never be exposed through a public website bucket.
 
+
+
+
+## Deployment Screenshots
+
+The following screenshots document the deployment, troubleshooting, verification, and cleanup of the AWS S3 static website.
+
+### 1. Initial CloudFormation Deployment
+
+The CloudFormation stack was successfully deployed, creating the S3 bucket required for hosting the static website.
+
+![Initial CloudFormation Deployment](screenshots/01-cloudformation-deployment.jpeg)
+
+### 2. Uploading the HTML File to Amazon S3
+
+I used the AWS CLI to upload the `index.html` file to the S3 bucket.
+
+![S3 HTML Upload](screenshots/02-s3-html-upload.jpeg)
+
+### 3. Troubleshooting the AccessDenied Error
+
+When I initially accessed the website, Amazon S3 returned an `AccessDenied` error, indicating that the object could not be accessed publicly.
+
+![AccessDenied Error](screenshots/03-access-denied.jpeg)
+
+### 4. Investigating S3 Public Access Settings
+
+I investigated the bucket permissions and identified that Block Public Access was enabled, preventing anonymous access to the website.
+
+![S3 Public Access Settings](screenshots/04-s3-public-access-settings.jpeg)
+
+### 5. Configuring the S3 Bucket Policy
+
+I updated the CloudFormation template to include a bucket policy granting public read access to the website objects.
+
+![CloudFormation Bucket Policy](screenshots/05-cloudformation-bucket-policy.jpeg)
+
+### 6. Updating the CloudFormation Stack
+
+After modifying the YAML template, I updated the existing CloudFormation stack. The deployment completed successfully, and the bucket policy was created.
+
+![CloudFormation Stack Update](screenshots/06-cloudformation-update.jpeg)
+
+### 7. Verifying the Website
+
+After resolving the permissions issue, I successfully accessed the static website through my browser.
+
+![Working S3 Static Website](screenshots/07-website-working.jpeg)
+
+### 8. Cleaning Up AWS Resources
+
+After completing the project, I removed the website files from the S3 bucket and deleted the CloudFormation stack to avoid unnecessary AWS charges.
+
+![AWS Resource Cleanup](screenshots/08-stack-cleanup.jpeg)
+
